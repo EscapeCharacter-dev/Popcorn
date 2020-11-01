@@ -11,7 +11,7 @@ typedef struct Registers_t_
     uint32 int_no, err_code;
     uint32 eip, cs, eflags, useresp, ss;
 
-} Registers_t;
+} packed Registers_t;
 
 typedef void (*ISR)(Registers_t);
 void RegisterInterruptHandler(uint8 n, ISR handler);

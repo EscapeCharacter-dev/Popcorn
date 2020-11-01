@@ -13,7 +13,13 @@ void ISRHandler(Registers_t *regs)
 {
     MonitorPuts("Received interrupt from CPU (or software): ");
     MonitorPuti(regs->int_no);
+    MonitorPuts(", 0x");
+    MonitorPutiX(regs->err_code);
     MonitorPutc('\n');
+
+    if (interruptHandlers[regs->int_no] >= 40)
+        outb(0xA0, 0x20);
+    outb(0x20, 0x20);
 
     if (interruptHandlers[regs->int_no] != 0)
     {

@@ -40,7 +40,7 @@ void InitDescriptorTables()
 static void InitGdt()
 {
     gdtPtr.limit = (sizeof(GdtEntry) * 5) - 1;
-    gdtPtr.base  = (uint32)&gdtEntries;
+    gdtPtr.base  = (uint32)gdtEntries;
 
     GdtSetGate0();
     GdtSetGate(1, 0, 0xFFFFFFFF, 0x9A, 0xCF);
@@ -64,28 +64,21 @@ static void GdtSetGate(int32 num, uint32 base, uint32 limit, uint8 access, uint8
 
 /* ****** IDT CODE BELOW */
 
-static int MASTER_IRQ_COMMAND = 0x20;
-static int MASTER_IRQ_DATA = 0x21;
-static int SLAVE_IRQ_COMMAND = 0xA0;
-static int SLAVE_IRQ_DATA = 0xA1;
-
 static void InitIdt()
 {
     
     memset(&idtEntries, 0, sizeof(IdtEntry) * 256);
-    idtPtr.limit = sizeof(IdtEntry) * 256 - 1;
-    idtPtr.base  = (uint32)&idtEntries;
+    idtPtr.limit = (sizeof (IdtEntry) * 256) + (((uint32)idtEntries & 0xffff) << 16);
+    idtPtr.base  = (uint32)idtEntries;
 
-    outb(MASTER_IRQ_COMMAND, 0x11);
-    outb(SLAVE_IRQ_COMMAND, 0x11);
-    outb(MASTER_IRQ_DATA, 0x20);
-    outb(SLAVE_IRQ_DATA, 0x20);
-    outb(MASTER_IRQ_DATA, 0x04);
-	outb(SLAVE_IRQ_DATA, 0x02);
-	outb(MASTER_IRQ_DATA, 0x01);
-	outb(SLAVE_IRQ_DATA, 0x01);
-	outb(MASTER_IRQ_DATA, 0x0);
-	outb(SLAVE_IRQ_DATA, 0x0);
+    outb(0x21 , 0x20);
+	outb(0xA1 , 0x28);
+	outb(0x21 , 0x00);  
+	outb(0xA1 , 0x00);  
+	outb(0x21 , 0x01);
+	outb(0xA1 , 0x01);
+	outb(0x21 , 0xff);
+	outb(0xA1 , 0xff);
 
     IdtSetGate(0, (uint32)ISR0, 0x8, 0x8E);
     IdtSetGate(1, (uint32)ISR1, 0x8, 0x8E);

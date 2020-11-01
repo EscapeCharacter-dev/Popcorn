@@ -87,24 +87,26 @@ IsrCommonStub:
     pusha
     mov ax, ds
     push eax
-    mov ax, 0x10
+    mov ax, 0x10 ;0x10
     mov ds, ax
     mov es, ax
     mov fs, ax
     mov gs, ax
-
-    push esp
+    push esp                 ; At this point ESP is a pointer to where GS (and the rest
+                             ; of the interrupt handler state resides)
+                             ; Push ESP as 1st parameter as it's a 
+                             ; pointer to a registers_t  
     call ISRHandler
-    add esp, 4
-
-    pop eax
-    mov ds, ax
-    mov es, ax
-    mov fs, ax
-    mov gs, ax
-
+    pop ebx                  ; Remove the saved ESP on the stack. Efficient to just pop it 
+                             ; into any register. You could have done: add esp, 4 as well
+    pop ebx
+    mov ds, bx
+    mov es, bx
+    mov fs, bx
+    mov gs, bx
     popa
     add esp, 8
+    sti
     iret
 
 
@@ -113,22 +115,24 @@ IrqCommonStub:
     pusha
     mov ax, ds
     push eax
-    mov ax, 0x10
+    mov ax, 0x10 ;0x10
     mov ds, ax
     mov es, ax
     mov fs, ax
     mov gs, ax
-
-    push esp
+    push esp                 ; At this point ESP is a pointer to where GS (and the rest
+                             ; of the interrupt handler state resides)
+                             ; Push ESP as 1st parameter as it's a 
+                             ; pointer to a registers_t  
     call IRQHandler
-    add esp, 4
-
-    pop eax
-    mov ds, ax
-    mov es, ax
-    mov fs, ax
-    mov gs, ax
-
+    pop ebx                  ; Remove the saved ESP on the stack. Efficient to just pop it 
+                             ; into any register. You could have done: add esp, 4 as well
+    pop ebx
+    mov ds, bx
+    mov es, bx
+    mov fs, bx
+    mov gs, bx
     popa
     add esp, 8
+    sti
     iret
