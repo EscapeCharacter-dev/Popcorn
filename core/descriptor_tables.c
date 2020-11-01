@@ -31,8 +31,8 @@ extern ISR interruptHandlers[];
 void InitDescriptorTables()
 {
     InitGdt();
-    InitIdt();
     memset(&interruptHandlers, 0, sizeof(ISR) * 256);
+    InitIdt();
 }
 
 /* ***** GDT CODE BELOW */
@@ -53,10 +53,10 @@ static void InitGdt()
 
 static void GdtSetGate(int32 num, uint32 base, uint32 limit, uint8 access, uint8 gran)
 {
-    gdtEntries[num].base_low    =  (base & 0xFFFF);
+    gdtEntries[num].base_low    =  base & 0xFFFF;
     gdtEntries[num].base_middle =  (base >> 16) & 0xFF;
-    gdtEntries[num].base_high   =  (base >> 24) & 0xFF;
-    gdtEntries[num].limit_low   =  (limit & 0xFFFF);
+    gdtEntries[num].base_high   =  base >> 24 & 0xFF;
+    gdtEntries[num].limit_low   =  limit & 0xFFFF;
     gdtEntries[num].granularity =  (limit >> 16) & 0xF;
     gdtEntries[num].granularity |= gran & 0xF0;
     gdtEntries[num].access      =  access;
@@ -64,24 +64,28 @@ static void GdtSetGate(int32 num, uint32 base, uint32 limit, uint8 access, uint8
 
 /* ****** IDT CODE BELOW */
 
+static int MASTER_IRQ_COMMAND = 0x20;
+static int MASTER_IRQ_DATA = 0x21;
+static int SLAVE_IRQ_COMMAND = 0xA0;
+static int SLAVE_IRQ_DATA = 0xA1;
+
 static void InitIdt()
 {
+    
+    memset(&idtEntries, 0, sizeof(IdtEntry) * 256);
     idtPtr.limit = sizeof(IdtEntry) * 256 - 1;
     idtPtr.base  = (uint32)&idtEntries;
 
-    memset(&idtEntries, 0, sizeof(IdtEntry) * 256);
-
-    /* IRQ remap */
-    outb(0x20, 0x11);
-    outb(0xA0, 0x11);
-    outb(0x21, 0x20);
-    outb(0xA1, 0x28);
-    outb(0x21, 0x04);
-    outb(0xA1, 0x02);
-    outb(0x21, 0x01);
-    outb(0xA1, 0x01);
-    outb(0x21, 0x0);
-    outb(0xA1, 0x0);
+    outb(MASTER_IRQ_COMMAND, 0x11);
+    outb(SLAVE_IRQ_COMMAND, 0x11);
+    outb(MASTER_IRQ_DATA, 0x20);
+    outb(SLAVE_IRQ_DATA, 0x20);
+    outb(MASTER_IRQ_DATA, 0x04);
+	outb(SLAVE_IRQ_DATA, 0x02);
+	outb(MASTER_IRQ_DATA, 0x01);
+	outb(SLAVE_IRQ_DATA, 0x01);
+	outb(MASTER_IRQ_DATA, 0x0);
+	outb(SLAVE_IRQ_DATA, 0x0);
 
     IdtSetGate(0, (uint32)ISR0, 0x8, 0x8E);
     IdtSetGate(1, (uint32)ISR1, 0x8, 0x8E);
@@ -115,6 +119,7 @@ static void InitIdt()
     IdtSetGate(29, (uint32)ISR29, 0x8, 0x8E);
     IdtSetGate(30, (uint32)ISR30, 0x8, 0x8E);
     IdtSetGate(31, (uint32)ISR31, 0x8, 0x8E);
+
     IdtSetGate(32, (uint32)IRQ0, 0x8, 0x8E);
     IdtSetGate(33, (uint32)IRQ1, 0x8, 0x8E);
     IdtSetGate(34, (uint32)IRQ2, 0x8, 0x8E);
@@ -142,5 +147,5 @@ static void IdtSetGate(uint8 num, uint32 base, uint16 sel, uint8 flags)
     idtEntries[num].base_hi = (base >> 16) & 0xFFFF;
     idtEntries[num].sel     = sel;
     idtEntries[num].always0 = 0;
-    idtEntries[num].flags   = flags;
+    idtEntries[num].flags   = flags | 0x60;
 }

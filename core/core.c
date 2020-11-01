@@ -31,4 +31,5 @@ void krnlep(void)
 {
     InitDescriptorTables();
     asm volatile("sti");
+    MonitorPuts("Hi");
 }

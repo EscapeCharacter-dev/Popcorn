@@ -9,31 +9,30 @@ void RegisterInterruptHandler(uint8 n, ISR handler)
     interruptHandlers[n] = handler;
 }
 
-void ISRHandler(Registers_t regs)
+void ISRHandler(Registers_t *regs)
 {
-    MonitorPuts("Received interrupt from CPU: ");
-    MonitorPuti(regs.int_no);
+    MonitorPuts("Received interrupt from CPU (or software): ");
+    MonitorPuti(regs->int_no);
     MonitorPutc('\n');
 
-    if (interruptHandlers[regs.int_no] != 0)
+    if (interruptHandlers[regs->int_no] != 0)
     {
-        ISR handler = interruptHandlers[regs.int_no];
-        handler(regs);
+        interruptHandlers[regs->int_no](*regs);
     }
 }
 
-void IRQHandler(Registers_t regs)
+void IRQHandler(Registers_t *regs)
 {   
 
-    if (interruptHandlers[regs.int_no] != 0)
-    {
-        ISR handler = interruptHandlers[regs.int_no];
-        handler(regs);
-    }
 
     /* EOI part */
 
-    if (interruptHandlers[regs.int_no] >= 40)
+    if (interruptHandlers[regs->int_no] >= 40)
         outb(0xA0, 0x20);
     outb(0x20, 0x20);
+
+    if (interruptHandlers[regs->int_no] != 0)
+    {
+        interruptHandlers[regs->int_no](*regs);
+    }
 }

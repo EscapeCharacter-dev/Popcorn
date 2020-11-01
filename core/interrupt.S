@@ -93,8 +93,11 @@ IsrCommonStub:
     mov fs, ax
     mov gs, ax
 
+    push esp
     call ISRHandler
-    pop ebx
+    add esp, 4
+
+    pop eax
     mov ds, ax
     mov es, ax
     mov fs, ax
@@ -102,32 +105,30 @@ IsrCommonStub:
 
     popa
     add esp, 8
-    sti
     iret
 
 
 [EXTERN IRQHandler]
 IrqCommonStub:
     pusha
-
     mov ax, ds
     push eax
-    
     mov ax, 0x10
     mov ds, ax
     mov es, ax
     mov fs, ax
     mov gs, ax
 
+    push esp
     call IRQHandler
+    add esp, 4
 
-    pop ebx
-    mov ds, bx
-    mov es, bx
-    mov fs, bx
-    mov gs, bx
+    pop eax
+    mov ds, ax
+    mov es, ax
+    mov fs, ax
+    mov gs, ax
 
     popa
     add esp, 8
-    sti
     iret
