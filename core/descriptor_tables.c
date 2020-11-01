@@ -5,18 +5,18 @@
 
 /* GDT STUFF BELOW */
 
-extern void GdtFlush(uint32);
+extern void GdtFlush();
 static void InitGdt();
 static void GdtSetGate(int32, uint32, uint32, uint8, uint8);
 
 #define GdtSetGate0() GdtSetGate(0, 0, 0, 0, 0)
 
-GdtEntry gdtEntries[5];
+GdtEntry gdtEntries[3];
 GdtPtr   gdtPtr;
 
 /* ****** IDT STUFF BELOW */
 
-extern void IdtFlush(uint32);
+extern void IdtFlush();
 
 static void InitIdt();
 static void IdtSetGate(uint8, uint32, uint16, uint8);
@@ -39,23 +39,21 @@ void InitDescriptorTables()
 
 static void InitGdt()
 {
-    gdtPtr.limit = (sizeof(GdtEntry) * 5) - 1;
-    gdtPtr.base  = (uint32)gdtEntries;
+    gdtPtr.limit = (sizeof(GdtEntry) * 3) - 1;
+    gdtPtr.base  = (uint32)&gdtEntries;
 
     GdtSetGate0();
     GdtSetGate(1, 0, 0xFFFFFFFF, 0x9A, 0xCF);
     GdtSetGate(2, 0, 0xFFFFFFFF, 0x92, 0xCF);
-    GdtSetGate(3, 0, 0xFFFFFFFF, 0xFA, 0xCF);
-    GdtSetGate(4, 0, 0xFFFFFFFF, 0xF2, 0xCF);
 
-    GdtFlush((uint32)&gdtPtr);
+    GdtFlush();
 }
 
 static void GdtSetGate(int32 num, uint32 base, uint32 limit, uint8 access, uint8 gran)
 {
     gdtEntries[num].base_low    =  base & 0xFFFF;
     gdtEntries[num].base_middle =  (base >> 16) & 0xFF;
-    gdtEntries[num].base_high   =  base >> 24 & 0xFF;
+    gdtEntries[num].base_high   =  (base >> 24) & 0xFF;
     gdtEntries[num].limit_low   =  limit & 0xFFFF;
     gdtEntries[num].granularity =  (limit >> 16) & 0xF;
     gdtEntries[num].granularity |= gran & 0xF0;
@@ -66,20 +64,12 @@ static void GdtSetGate(int32 num, uint32 base, uint32 limit, uint8 access, uint8
 
 static void InitIdt()
 {
-    
+    idtPtr.limit = (sizeof (IdtEntry) * 256) - 1;
+    idtPtr.base  = (uint32)&idtEntries;
+
     memset(&idtEntries, 0, sizeof(IdtEntry) * 256);
-    idtPtr.limit = (sizeof (IdtEntry) * 256) + (((uint32)idtEntries & 0xffff) << 16);
-    idtPtr.base  = (uint32)idtEntries;
 
-    outb(0x21 , 0x20);
-	outb(0xA1 , 0x28);
-	outb(0x21 , 0x00);  
-	outb(0xA1 , 0x00);  
-	outb(0x21 , 0x01);
-	outb(0xA1 , 0x01);
-	outb(0x21 , 0xff);
-	outb(0xA1 , 0xff);
-
+    
     IdtSetGate(0, (uint32)ISR0, 0x8, 0x8E);
     IdtSetGate(1, (uint32)ISR1, 0x8, 0x8E);
     IdtSetGate(2, (uint32)ISR2, 0x8, 0x8E);
@@ -113,6 +103,17 @@ static void InitIdt()
     IdtSetGate(30, (uint32)ISR30, 0x8, 0x8E);
     IdtSetGate(31, (uint32)ISR31, 0x8, 0x8E);
 
+    outb(0x20, 0x11);
+    outb(0xA0, 0x11);
+    outb(0x21, 0x20);
+    outb(0xA1, 0x28);
+    outb(0x21, 0x04);
+    outb(0xA1, 0x02);
+    outb(0x21, 0x01);
+    outb(0xA1, 0x01);
+    outb(0x21, 0x0);
+    outb(0xA1, 0x0);
+
     IdtSetGate(32, (uint32)IRQ0, 0x8, 0x8E);
     IdtSetGate(33, (uint32)IRQ1, 0x8, 0x8E);
     IdtSetGate(34, (uint32)IRQ2, 0x8, 0x8E);
@@ -130,7 +131,7 @@ static void InitIdt()
     IdtSetGate(46, (uint32)IRQ14, 0x8, 0x8E);
     IdtSetGate(47, (uint32)IRQ15, 0x8, 0x8E);
 
-    IdtFlush((uint32)&idtPtr);
+    IdtFlush();
 
 }
 

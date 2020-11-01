@@ -85,54 +85,50 @@ IRQ 15, 47
 [EXTERN ISRHandler]
 IsrCommonStub:
     pusha
-    mov ax, ds
-    push eax
-    mov ax, 0x10 ;0x10
+    push ds
+    push es
+    push fs
+    push gs
+    mov ax, 0x10   ; Load the Kernel Data Segment descriptor!
     mov ds, ax
     mov es, ax
     mov fs, ax
     mov gs, ax
-    push esp                 ; At this point ESP is a pointer to where GS (and the rest
-                             ; of the interrupt handler state resides)
-                             ; Push ESP as 1st parameter as it's a 
-                             ; pointer to a registers_t  
-    call ISRHandler
-    pop ebx                  ; Remove the saved ESP on the stack. Efficient to just pop it 
-                             ; into any register. You could have done: add esp, 4 as well
-    pop ebx
-    mov ds, bx
-    mov es, bx
-    mov fs, bx
-    mov gs, bx
+    mov eax, esp   ; Push us the stack
+    push eax
+    mov eax, ISRHandler
+    call eax       ; A special call, preserves the 'eip' register
+    pop eax
+    pop gs
+    pop fs
+    pop es
+    pop ds
     popa
-    add esp, 8
-    sti
+    add esp, 8     ; Cleans up the pushed error code and pushed ISR number
     iret
 
 
 [EXTERN IRQHandler]
 IrqCommonStub:
     pusha
-    mov ax, ds
-    push eax
-    mov ax, 0x10 ;0x10
+    push ds
+    push es
+    push fs
+    push gs
+    mov ax, 0x10
     mov ds, ax
     mov es, ax
     mov fs, ax
     mov gs, ax
-    push esp                 ; At this point ESP is a pointer to where GS (and the rest
-                             ; of the interrupt handler state resides)
-                             ; Push ESP as 1st parameter as it's a 
-                             ; pointer to a registers_t  
-    call IRQHandler
-    pop ebx                  ; Remove the saved ESP on the stack. Efficient to just pop it 
-                             ; into any register. You could have done: add esp, 4 as well
-    pop ebx
-    mov ds, bx
-    mov es, bx
-    mov fs, bx
-    mov gs, bx
+    mov eax, esp
+    push eax
+    mov eax, IRQHandler
+    call eax
+    pop eax
+    pop gs
+    pop fs
+    pop es
+    pop ds
     popa
     add esp, 8
-    sti
     iret

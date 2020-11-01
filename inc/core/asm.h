@@ -4,5 +4,6 @@
 #include "common.h"
 
 void outb(ushort port, byte value);
+byte inb(ushort port);
 
 #endif

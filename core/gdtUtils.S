@@ -27,8 +27,9 @@ GdtFlush:
 
 
 [GLOBAL IdtFlush]
+[EXTERN idtPtr]
 
 IdtFlush:
-    mov eax, [esp + 4]
-    lidt [eax]
+    lidt[idtPtr]
+    sti
     ret

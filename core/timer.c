@@ -22,7 +22,7 @@
 
 uint32 tick = 0;
 
-static void TimerCallback(Registers_t regs)
+void TimerCallback(Registers_t regs)
 {
     tick++;
     MonitorPuts("Tick: ");
@@ -30,11 +30,19 @@ static void TimerCallback(Registers_t regs)
     MonitorPutc('\n');
 }
 
+void SetTimerFrequency(int hz)
+{
+    int divisor = 1193180 / hz;       /* Calculate our divisor */
+    outb(0x43, 0x36);             /* Set our command byte 0x36 */
+    outb(0x40, divisor & 0xFF);   /* Set low byte of divisor */
+    outb(0x40, divisor >> 8);     /* Set high byte of divisor */
+}
+
 void InitTimer(uint32 frequency)
 {
     MonitorPuts("Starting initialization...\n");
 
-    RegisterInterruptHandler(IRQ0, &TimerCallback);
+    RegisterInterruptHandler(IRQ0, TimerCallback);
 
     uint32 divisor = 1193180 / frequency;
 

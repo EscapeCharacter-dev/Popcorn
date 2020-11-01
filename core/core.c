@@ -22,6 +22,7 @@
 #include "../inc/core/conio.h"
 #include "../inc/core/descriptor_tables.h"
 #include "../inc/core/timer.h"
+#include "../inc/core/keyboard.h"
 
 /* Kernel core entrypoint. This function will start all core subroutines.
    The loader will load the microkernel parts.
@@ -30,6 +31,6 @@
 void krnlep(void)
 {
     InitDescriptorTables();
-    asm volatile("sti");
-    MonitorPuts("Hi");
+    InitTimer(50);
+    InstallKeyboard();
 }
